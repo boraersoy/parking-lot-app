@@ -32,12 +32,13 @@ alert(error.data);
 
 
 <template>
-  <UForm ref="form" :state="state" :validate="validate" class="fixed top-0 left-0 p-4"@submit="onSubmit">
-    <UFormGroup label="licensePlate" name="licensePlate">
+  <div class="p-6 shadow-bg" >
+  <UForm ref="form" class="h-36" :state="state" :validate="validate" @submit="onSubmit">
+    <UFormGroup class="mt-2" label="Enter License Plate" name="licensePlate">
       <UInput v-model="state.licensePlate" />
     </UFormGroup>
 
-    <UButton type="submit" class="mt-4 ml-4">
+    <UButton type="submit" class="mt-4">
       Depart Car
     </UButton>
     <NuxtLink to="/viewdepartedcars">
@@ -49,4 +50,5 @@ alert(error.data);
 <UButton color="violet" variant="solid" class="ml-4">View Cars</UButton>
 </NuxtLink>
   </UForm>
+  </div>
 </template>

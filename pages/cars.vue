@@ -2,7 +2,8 @@
 
 
 import { ref, onMounted } from 'vue';
-
+const isFirstModalOpen = ref(false)
+const isSecondModalOpen = ref(false)
 const url = 'http://localhost:3001'
 //const cars = ref([]);
 const q = ref('')
@@ -42,25 +43,25 @@ function departCar(licensePlate) {
     </div>
     <div class="">
       <UTable :columns="columns" :rows="paginatedRows">
-      <template #actions-data="{ row }">
-        <UButton color="orange" size="xs" class="ml-2" variant="solid" @click="departCar(row.licensePlate)">Depart
-        </UButton>
-      </template>
-    </UTable>
+        <template #actions-data="{ row }">
+          <UButton color="orange" size="xs" class="ml-2" variant="solid" @click="departCar(row.licensePlate)">Depart
+          </UButton>
+        </template>
+      </UTable>
     </div>
 
     <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
       <UPagination v-model="page" :page-count="pageCount" :total="cars.length" />
     </div>
     <div class="mt-4">
-      <NuxtLink to="/enter">
-
-        <UButton color="violet" variant="solid">Enter Car</UButton>
-      </NuxtLink>
-      <NuxtLink to="/deportcar">
-
-        <UButton color="orange" variant="solid" class="ml-4">Depart Car</UButton>
-      </NuxtLink>
+        <UButton @click="isFirstModalOpen = true" color="violet" variant="solid">Enter Car</UButton>
+        <UModal class="shadow-lg" v-model="isFirstModalOpen" :overlay="false">
+          <Enter />
+        </UModal>
+        <UButton @click="isSecondModalOpen = true" color="orange" variant="solid" class="ml-4">Depart Car</UButton>
+        <UModal v-model="isSecondModalOpen" :overlay="false">
+        <Deportcar />
+      </UModal>
 
       <NuxtLink to="viewdepartedcars">
         <UButton color="lime" variant="solid" class="ml-4">View Departed Cars</UButton>
