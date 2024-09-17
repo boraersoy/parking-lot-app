@@ -12,7 +12,7 @@
            <UButton color="orange" variant="solid"  >Depart</UButton>
            </NuxtLink>                    
 
-       <NuxtLink to="viewdeportedcars" class="ml-4">
+       <NuxtLink to="viewdepartedcars" class="ml-4">
            <UButton color="lime" variant="solid" >View Departed Cars</UButton>
        </NuxtLink>
      </div>
