@@ -8,7 +8,8 @@ const url = 'http://localhost:3001'
 const q = ref('')
 const pageCount = 10
 const page = ref(1)
-
+const isFirstModalOpen = ref(false)
+const isSecondModalOpen = ref(false)
 const columns = [
   { key: 'licensePlate', label: 'LicensePlate', sortable: true },
   { key: 'arrivalDate', label: 'ArrivalDate', sortable: true },
@@ -56,14 +57,14 @@ const { pending, data: cars } = await useLazyAsyncData('cars', () => $fetch(`${u
       <strong>Total Revenue:</strong> ${{ totalRevenue.toFixed(2) }}
     </div>
     <div class="flex justify-between mt-4">
-      <NuxtLink to="/enter">
-
-        <UButton color="violet" variant="solid">Enter Car</UButton>
-      </NuxtLink>
-      <NuxtLink to="/deportcar">
-
-        <UButton color="orange" variant="solid">Depart Car</UButton>
-      </NuxtLink>
+      <UButton @click="isFirstModalOpen = true" color="violet" variant="solid">Enter Car</UButton>
+        <UModal class="shadow-lg" v-model="isFirstModalOpen" :overlay="false">
+          <Enter />
+        </UModal>
+        <UButton @click="isSecondModalOpen = true" color="orange" variant="solid" class="ml-4">Depart Car</UButton>
+        <UModal v-model="isSecondModalOpen" :overlay="false">
+        <Deportcar />
+      </UModal>
 
       <NuxtLink to="cars">
         <UButton color="lime" variant="solid">View Cars</UButton>
