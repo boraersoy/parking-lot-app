@@ -3,37 +3,53 @@
 const columns = [
   { key: 'licensePlate', label: 'LicensePlate', sortable: true },
   { key: 'arrivalDate', label: 'ArrivalDate', sortable: true },
-  {key: "charge" , label: "Charge", sortable: true}
+
 ];
 const isFirstModalOpen = ref(false)
 const isSecondModalOpen = ref(false)
 const url = 'http://localhost:3001'
 const selectedColumns = ref(columns)
 const columnsTable = computed(() => columns.filter((column) => selectedColumns.value.includes(column)))
-const totalRevenue = computed(() => {
-  return cars.value.reduce((sum, todo) => sum + (todo.charge || 0), 0);
-})
+
 // Selected Rows
 const rows = ref([]) 
 
 
+
+// Actions
+const actions = [
+  [{
+    key: 'completed',
+    label: 'Completed',
+    icon: 'i-heroicons-check'
+  }], [{
+    key: 'uncompleted',
+    label: 'In Progress',
+    icon: 'i-heroicons-arrow-path'
+  }]
+]
+
+
+
 const search = ref('')
+
+
+
 
 // Pagination
 const sort = ref({ column: 'licensePlate', direction: 'asc' as const })
 const page = ref(1)
 const pageCount = ref(10)
-const pageTotal = ref(50)   //This value should be dynamic coming from the API 
+const pageTotal = ref(200) // This value should be dynamic coming from the API
 const pageFrom = computed(() => (page.value - 1) * pageCount.value + 1)
 const pageTo = computed(() => Math.min(page.value * pageCount.value, pageTotal.value))
 
 // Data
-const { data: cars, status} = await useLazyAsyncData<{
+const { data: todos, status } = await useLazyAsyncData<{
   licensePlate: string
   arrivalDate: string
-  charge: number
 
-}[]>('cars', () => ($fetch as any)(`http://localhost:3001/deported`, {
+}[]>('todos', () => ($fetch as any)(`http://localhost:3001/cars`, {
   query: {
     q: search.value,
     '_page': page.value,
@@ -45,6 +61,7 @@ const { data: cars, status} = await useLazyAsyncData<{
   default: () => [],
   watch: [page, search, pageCount, sort]
 })
+
 </script>
 
 <template>
@@ -61,7 +78,7 @@ const { data: cars, status} = await useLazyAsyncData<{
   >
     <template #header>
       <h2 class="font-semibold text-xl text-gray-900 dark:text-white leading-tight">
-        Departed Cars
+        Todos
       </h2>
     </template>
 
@@ -104,7 +121,7 @@ const { data: cars, status} = await useLazyAsyncData<{
     <UTable
       v-model="rows"
       v-model:sort="sort"
-      :rows="cars"
+      :rows="todos"
       :columns="columnsTable"
       :loading="status === 'pending'"
       sort-asc-icon="i-heroicons-arrow-up"
@@ -149,9 +166,7 @@ const { data: cars, status} = await useLazyAsyncData<{
       </div>
     </template>
   </UCard>
-  <div class="mt-4 p-4 bg-blue-200 text-blue-800 rounded">
-      <strong>Total Revenue:</strong> ${{ totalRevenue.toFixed(2) }}
-    </div>
+
   <div class="mt-4 p-4">
         <UButton class="ml-2" @click="isFirstModalOpen = true" color="violet" variant="solid">Enter Car</UButton>
         <UModal class="shadow-lg" v-model="isFirstModalOpen" :overlay="false">
@@ -162,10 +177,8 @@ const { data: cars, status} = await useLazyAsyncData<{
         <Deportcar />
       </UModal>
 
-      <NuxtLink to="cars">
-        <UButton  color="lime" variant="solid" class="ml-6">View Cars</UButton>
+      <NuxtLink to="viewdepartedcars">
+        <UButton  color="lime" variant="solid" class="ml-6">View Departed Cars</UButton>
       </NuxtLink>
-      cl: {{ cars.length }}
-
     </div>
 </template>
