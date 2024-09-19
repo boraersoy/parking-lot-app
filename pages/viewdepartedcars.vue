@@ -40,6 +40,11 @@ const { data: cars, status} = await useLazyAsyncData<{
     '_limit': pageCount.value,
     '_sort': sort.value.column,
     '_order': sort.value.direction
+  },
+  onResponse({ request, response, options }) {
+    // Process the response data
+    
+    localStorage.setItem('token', response._data.token)
   }
 }), {
   default: () => [],
@@ -165,7 +170,7 @@ const { data: cars, status} = await useLazyAsyncData<{
       <NuxtLink to="cars">
         <UButton  color="lime" variant="solid" class="ml-6">View Cars</UButton>
       </NuxtLink>
-      cl: {{ cars.length }}
+      cl: {{ cars }}
 
     </div>
 </template>
