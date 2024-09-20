@@ -46,7 +46,7 @@ interface Car {
   charge: number;
 }
 // Data
-const { data: carsData, status } = await useLazyAsyncData<{ cars: Car[], totalCount: number }>(
+const { data: carsData, status, execute } = await useLazyAsyncData<{ cars: Car[], totalCount: number }>(
   'cars', 
  () => ($fetch as any)(`http://localhost:3001/deported`, {
   query: {
@@ -59,7 +59,7 @@ const { data: carsData, status } = await useLazyAsyncData<{ cars: Car[], totalCo
 
 }), {
   default: () => ({ cars: [], totalCount: 0 }),
-  watch: [page, debouncedSearch, pageCount, sort]
+  watch: [page, pageCount, sort]
 })
 
 watchEffect(() => {
@@ -74,11 +74,18 @@ watch(search, () => {
   page.value = 1;
   updateDebouncedSearch();
 });
+
+let timer;
+function onFilterUpdate () {
+  clearTimeout(timer);
+  
+  timer = setTimeout(() => execute(), 1000);
+}
 </script>
 
 <template>
   <UCard
-    class="w-full"
+    class="w-full ml-4"
     :ui="{
       base: '',
       ring: '',
@@ -96,7 +103,7 @@ watch(search, () => {
 
     <!-- Filters -->
     <div class="flex items-center justify-between gap-3 px-4 py-3">
-      <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" placeholder="Search..." />
+      <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" placeholder="Search..." @change="onFilterUpdate"  />
     </div>
 
     <!-- Header and Action buttons -->
@@ -131,7 +138,7 @@ watch(search, () => {
 
     <!-- Table -->
     <UTable
-      v-model="rows"
+      
       v-model:sort="sort"
       :rows="carsData?.cars"
       :columns="columnsTable"
@@ -179,11 +186,8 @@ watch(search, () => {
       <div class="mt-4 p-4 bg-gray-100 rounded">
       <strong>Total Revenue:</strong> ${{ totalRevenue.toFixed(2) }}
     </div>
-    </template>
-  </UCard>
-
-  <div class="mt-4 p-4">
-        <UButton class="ml-2" @click="isFirstModalOpen = true" color="violet" variant="solid">Enter Car</UButton>
+    <div class="mt-4 p-4">
+        <UButton  @click="isFirstModalOpen = true" color="violet" variant="solid">Enter Car</UButton>
         <UModal class="shadow-lg" v-model="isFirstModalOpen" :overlay="false">
           <Enter />
         </UModal>
@@ -197,4 +201,9 @@ watch(search, () => {
       </NuxtLink>
 
     </div>
+  </template>
+
+  </UCard>
+
+
 </template>

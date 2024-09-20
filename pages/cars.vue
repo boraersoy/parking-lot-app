@@ -84,7 +84,7 @@ watch(search, () => {
 
 <template>
   <UCard
-    class="w-full"
+    class="w-full ml-4"
     :ui="{
       base: '',
       ring: '',
@@ -137,7 +137,6 @@ watch(search, () => {
 
     <!-- Table -->
     <UTable
-      v-model="rows"
       v-model:sort="sort"
       :rows="carsData?.cars"
       :columns="columnsTable"
@@ -145,7 +144,7 @@ watch(search, () => {
       sort-asc-icon="i-heroicons-arrow-up"
       sort-desc-icon="i-heroicons-arrow-down"
       sort-mode="manual"
-      class="w-full"
+      class="w-full "
     >
       
 
