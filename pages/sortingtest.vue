@@ -1,79 +1,67 @@
 <script lang="ts" setup>
 // Columns
-import debounce from 'lodash/debounce';
-
 const columns = [
   { key: 'licensePlate', label: 'LicensePlate', sortable: true },
   { key: 'arrivalDate', label: 'ArrivalDate', sortable: true },
-  {key: "charge" , label: "Charge", sortable: true}
+
 ];
 const isFirstModalOpen = ref(false)
 const isSecondModalOpen = ref(false)
 const url = 'http://localhost:3001'
 const selectedColumns = ref(columns)
 const columnsTable = computed(() => columns.filter((column) => selectedColumns.value.includes(column)))
-const totalRevenue = computed(() => {
-  // First get the value of carsData
-  const data = carsData.value;
-
-  // Then access the cars array and calculate the total revenue
-  return data.cars.reduce((sum, car) => sum + (car.charge || 0), 0);
-});
 
 // Selected Rows
 const rows = ref([]) 
 
 
+
+// Actions
+const actions = [
+  [{
+    key: 'completed',
+    label: 'Completed',
+    icon: 'i-heroicons-check'
+  }], [{
+    key: 'uncompleted',
+    label: 'In Progress',
+    icon: 'i-heroicons-arrow-path'
+  }]
+]
+
+
+
 const search = ref('')
+
+
+
 
 // Pagination
 const sort = ref({ column: 'licensePlate', direction: 'asc' as const })
 const page = ref(1)
 const pageCount = ref(10)
-const pageTotal = ref(50)   //This value should be dynamic coming from the API 
+const pageTotal = ref(200) // This value should be dynamic coming from the API
 const pageFrom = computed(() => (page.value - 1) * pageCount.value + 1)
 const pageTo = computed(() => Math.min(page.value * pageCount.value, pageTotal.value))
 
-//adding debounding effect to search function
-const debouncedSearch = ref(search.value);
-const updateDebouncedSearch = debounce(() => {
-  debouncedSearch.value = search.value;
-}, 1200); // 2000ms debounce delay
-
-interface Car {
-  licensePlate: string;
-  arrivalDate: string;
-  charge: number;
-}
 // Data
-const { data: carsData, status } = await useLazyAsyncData<{ cars: Car[], totalCount: number }>(
-  'cars', 
- () => ($fetch as any)(`http://localhost:3001/deported`, {
+const { data: todos, status } = await useLazyAsyncData<{
+  licensePlate: string
+  arrivalDate: string
+
+}[]>('todos', () => ($fetch as any)(`http://localhost:3001/cars`, {
   query: {
-    q: debouncedSearch.value,
+    q: search.value,
     '_page': page.value,
     '_limit': pageCount.value,
     '_sort': sort.value.column,
     '_order': sort.value.direction
-  },
-
+  }
 }), {
-  default: () => ({ cars: [], totalCount: 0 }),
-  watch: [page, debouncedSearch, pageCount, sort]
+  default: () => [],
+  watch: [page, search, pageCount, sort]
 })
 
-watchEffect(() => {
-  if (carsData.value) {
-    pageTotal.value = carsData.value.totalCount || 0; // Assign totalCount to pageTotal
-    console.log('Total Count:', carsData.value.totalCount);
-  }
-});
-// Delayed search watcher using setTimeout
-
-watch(search, () => {
-  page.value = 1;
-  updateDebouncedSearch();
-});
 </script>
 
 <template>
@@ -90,7 +78,7 @@ watch(search, () => {
   >
     <template #header>
       <h2 class="font-semibold text-xl text-gray-900 dark:text-white leading-tight">
-        Departed Cars
+        Todos
       </h2>
     </template>
 
@@ -133,7 +121,7 @@ watch(search, () => {
     <UTable
       v-model="rows"
       v-model:sort="sort"
-      :rows="carsData?.cars"
+      :rows="todos"
       :columns="columnsTable"
       :loading="status === 'pending'"
       sort-asc-icon="i-heroicons-arrow-up"
@@ -176,9 +164,6 @@ watch(search, () => {
           }"
         />
       </div>
-      <div class="mt-4 p-4 bg-gray-100 rounded">
-      <strong>Total Revenue:</strong> ${{ totalRevenue.toFixed(2) }}
-    </div>
     </template>
   </UCard>
 
@@ -192,9 +177,8 @@ watch(search, () => {
         <Deportcar />
       </UModal>
 
-      <NuxtLink to="cars">
-        <UButton  color="lime" variant="solid" class="ml-6">View Cars</UButton>
+      <NuxtLink to="viewdepartedcars">
+        <UButton  color="lime" variant="solid" class="ml-6">View Departed Cars</UButton>
       </NuxtLink>
-
     </div>
 </template>
