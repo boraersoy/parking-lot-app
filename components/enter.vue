@@ -32,7 +32,7 @@ async function onSubmit() {
 
 
 <template>
-  <div class="p-4">
+  <div class="p-4 bg-gray-50 rounded-lg shadow-md">
   <UForm class="h-36 " ref="form" :state="state" :validate="validate" @submit="onSubmit">
     <UFormGroup class="mt-4" label="Enter License Plate" name="licensePlate">
       <UInput v-model="state.licensePlate" />
@@ -43,10 +43,7 @@ async function onSubmit() {
       Enter Car
     </UButton>
 
-    <NuxtLink to="/cars">
-
-    <UButton color="violet" variant="solid" class="ml-4 h-9">View Cars</UButton>
-    </NuxtLink>
+ 
   </UForm>
 </div>
 </template>

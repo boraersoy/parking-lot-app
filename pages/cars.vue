@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 // Columns
+import debounce from 'lodash/debounce';
+
 const columns = [
   { key: 'licensePlate', label: 'LicensePlate', sortable: true },
   { key: 'arrivalDate', label: 'ArrivalDate', sortable: true },
@@ -11,12 +13,15 @@ const url = 'http://localhost:3001'
 const selectedColumns = ref(columns)
 const columnsTable = computed(() => columns.filter((column) => selectedColumns.value.includes(column)))
 
+
+
 // Selected Rows
 const rows = ref([]) 
 
 const search = ref('')
 
-// Pagination
+
+// Create a debounced version of the fetch function// Pagination
 const sort = ref({ column: 'licensePlate', direction: 'asc' as const })
 const page = ref(1)
 const pageCount = ref(10)
@@ -24,19 +29,29 @@ const pageTotal = ref(200) // This value should be dynamic coming from the API
 const pageFrom = computed(() => (page.value - 1) * pageCount.value + 1)
 const pageTo = computed(() => Math.min(page.value * pageCount.value, pageTotal.value))
 
+//adding debounding effect to search function
+const debouncedSearch = ref(search.value);
+const updateDebouncedSearch = debounce(() => {
+  debouncedSearch.value = search.value;
+}, 1200); // 2000ms debounce delay
+
+
 interface Car {
   licensePlate: string;
   arrivalDate: string;
   charge: number;
-  // Add any other properties your Car model has
 }
+
+
+
+// Create a debounced version of the fetch function for search
 
 // Data
 const { data: carsData, status } = await useLazyAsyncData<{ cars: Car[], totalCount: number }>(
   'cars', 
   () => ($fetch as any)(`http://localhost:3001/cars`, {
     query: {
-      q: search.value,
+      q: debouncedSearch.value,
       '_page': page.value,
       '_limit': pageCount.value,
       '_sort': sort.value.column,
@@ -46,20 +61,25 @@ const { data: carsData, status } = await useLazyAsyncData<{ cars: Car[], totalCo
   }), 
   {
     default: () => ({ cars: [], totalCount: 0 }),
-    watch: [page, search, pageCount, sort]
+    watch: [page, debouncedSearch, pageCount, sort]
   }
 )
-watch(search, (newSearch) => {
-  if (newSearch) {
-    page.value = 1; // Reset page to 1 on new search
-  }
-});
 watchEffect(() => {
   if (carsData.value) {
     pageTotal.value = carsData.value.totalCount || 0; // Assign totalCount to pageTotal
     console.log('Total Count:', carsData.value.totalCount);
   }
 });
+// Delayed search watcher using setTimeout
+
+watch(search, () => {
+  page.value = 1;
+  updateDebouncedSearch();
+});
+
+
+
+
 </script>
 
 <template>
@@ -178,6 +198,5 @@ watchEffect(() => {
         <UButton  color="lime" variant="solid" class="ml-6">View Departed Cars</UButton>
       </NuxtLink>
     </div>
-    cli: {{carsData.totalCount }}
 
 </template>

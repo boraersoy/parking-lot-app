@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 // Columns
+import debounce from 'lodash/debounce';
+
 const columns = [
   { key: 'licensePlate', label: 'LicensePlate', sortable: true },
   { key: 'arrivalDate', label: 'ArrivalDate', sortable: true },
@@ -11,8 +13,13 @@ const url = 'http://localhost:3001'
 const selectedColumns = ref(columns)
 const columnsTable = computed(() => columns.filter((column) => selectedColumns.value.includes(column)))
 const totalRevenue = computed(() => {
-  return cars.value.reduce((sum, todo) => sum + (todo.charge || 0), 0);
-})
+  // First get the value of carsData
+  const data = carsData.value;
+
+  // Then access the cars array and calculate the total revenue
+  return data.cars.reduce((sum, car) => sum + (car.charge || 0), 0);
+});
+
 // Selected Rows
 const rows = ref([]) 
 
@@ -27,29 +34,46 @@ const pageTotal = ref(50)   //This value should be dynamic coming from the API
 const pageFrom = computed(() => (page.value - 1) * pageCount.value + 1)
 const pageTo = computed(() => Math.min(page.value * pageCount.value, pageTotal.value))
 
-// Data
-const { data: cars, status} = await useLazyAsyncData<{
-  licensePlate: string
-  arrivalDate: string
-  charge: number
+//adding debounding effect to search function
+const debouncedSearch = ref(search.value);
+const updateDebouncedSearch = debounce(() => {
+  debouncedSearch.value = search.value;
+}, 1200); // 2000ms debounce delay
 
-}[]>('cars', () => ($fetch as any)(`http://localhost:3001/deported`, {
+interface Car {
+  licensePlate: string;
+  arrivalDate: string;
+  charge: number;
+}
+// Data
+const { data: carsData, status } = await useLazyAsyncData<{ cars: Car[], totalCount: number }>(
+  'cars', 
+ () => ($fetch as any)(`http://localhost:3001/deported`, {
   query: {
-    q: search.value,
+    q: debouncedSearch.value,
     '_page': page.value,
     '_limit': pageCount.value,
     '_sort': sort.value.column,
     '_order': sort.value.direction
   },
-  onResponse({ request, response, options }) {
-    // Process the response data
-    
-    localStorage.setItem('token', response._data.token)
-  }
+
 }), {
-  default: () => [],
-  watch: [page, search, pageCount, sort]
+  default: () => ({ cars: [], totalCount: 0 }),
+  watch: [page, debouncedSearch, pageCount, sort]
 })
+
+watchEffect(() => {
+  if (carsData.value) {
+    pageTotal.value = carsData.value.totalCount || 0; // Assign totalCount to pageTotal
+    console.log('Total Count:', carsData.value.totalCount);
+  }
+});
+// Delayed search watcher using setTimeout
+
+watch(search, () => {
+  page.value = 1;
+  updateDebouncedSearch();
+});
 </script>
 
 <template>
@@ -109,7 +133,7 @@ const { data: cars, status} = await useLazyAsyncData<{
     <UTable
       v-model="rows"
       v-model:sort="sort"
-      :rows="cars"
+      :rows="carsData?.cars"
       :columns="columnsTable"
       :loading="status === 'pending'"
       sort-asc-icon="i-heroicons-arrow-up"
@@ -152,11 +176,12 @@ const { data: cars, status} = await useLazyAsyncData<{
           }"
         />
       </div>
-    </template>
-  </UCard>
-  <div class="mt-4 p-4 bg-blue-200 text-blue-800 rounded">
+      <div class="mt-4 p-4 bg-gray-100 rounded">
       <strong>Total Revenue:</strong> ${{ totalRevenue.toFixed(2) }}
     </div>
+    </template>
+  </UCard>
+
   <div class="mt-4 p-4">
         <UButton class="ml-2" @click="isFirstModalOpen = true" color="violet" variant="solid">Enter Car</UButton>
         <UModal class="shadow-lg" v-model="isFirstModalOpen" :overlay="false">
@@ -170,7 +195,6 @@ const { data: cars, status} = await useLazyAsyncData<{
       <NuxtLink to="cars">
         <UButton  color="lime" variant="solid" class="ml-6">View Cars</UButton>
       </NuxtLink>
-      cl: {{ cars }}
 
     </div>
 </template>
